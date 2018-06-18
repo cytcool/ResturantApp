@@ -1,13 +1,15 @@
-package com.example.cyt.resturantapp;
+package com.example.cyt.resturantapp.activity;
 
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 
-public class OrderActivity extends AppCompatActivity {
+import com.example.cyt.resturantapp.R;
+
+public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_to_order);
+        setContentView(R.layout.activity_main);
     }
 }

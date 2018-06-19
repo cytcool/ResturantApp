@@ -1,7 +1,11 @@
 package com.example.cyt.resturantapp.net;
 
+import android.util.Log;
+
+import com.example.cyt.resturantapp.utils.GsonUtil;
 import com.google.gson.Gson;
 import com.google.gson.JsonObject;
+import com.google.gson.internal.$Gson$Types;
 import com.zhy.http.okhttp.callback.StringCallback;
 
 import org.json.JSONException;
@@ -16,16 +20,17 @@ public abstract class CommonCallback<T> extends StringCallback {
 
     Type mType;
 
-    public CommonCallback(){
-        Class<? extends CommonCallback> clazz = getClass();
-        Type genericSuperClass = clazz.getGenericSuperclass();
+    public CommonCallback() {
+        mType = getSuperclassTypeParameter(getClass());
+    }
 
-        if (genericSuperClass instanceof Class){
-            throw new RuntimeException("Miss type Params");
+    static Type getSuperclassTypeParameter(Class<?> subclass) {
+        Type superclass = subclass.getGenericSuperclass();
+        if (superclass instanceof Class) {
+            throw new RuntimeException("Missing type parameter.");
         }
-
-        ParameterizedType parameterizedType = (ParameterizedType) genericSuperClass;
-        mType = parameterizedType.getActualTypeArguments()[0];
+        ParameterizedType parameterized = (ParameterizedType) superclass;
+        return $Gson$Types.canonicalize(parameterized.getActualTypeArguments()[0]);
     }
 
     @Override
@@ -33,28 +38,23 @@ public abstract class CommonCallback<T> extends StringCallback {
         onError(e);
     }
 
+    public abstract void onError(Exception e);
+
+    public abstract void onSuccess(T response);
+
     @Override
     public void onResponse(String response, int id) {
         try {
             JSONObject resp = new JSONObject(response);
             int resultCode = resp.getInt("resultCode");
-
-            if (resultCode == 1){
-                String data = resp.getString("data");
-                Gson gson = new Gson();
-                onSuccess((T) gson.fromJson(data,mType));
-            }
-            else {
+            if (resultCode == 1) {
+                onSuccess((T) GsonUtil.getGson().fromJson(resp.getString("data"), mType));
+            } else {
                 onError(new RuntimeException(resp.getString("resultMessage")));
             }
-
-        } catch (JSONException e) {
+        } catch (Exception e) {
             e.printStackTrace();
             onError(e);
         }
     }
-
-    public abstract void onError(Exception e);
-
-    public abstract void onSuccess(T response);
 }
